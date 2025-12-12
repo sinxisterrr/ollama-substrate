@@ -1,11 +1,14 @@
 """
-🏴‍☠️ PHASE 2: Message Continuity System - Letta's Conversation Magic!
+Message Continuity System for Substrate AI
 
-This is the SECRET to Letta's coherence:
+Ensures conversational coherence across sessions:
 - Messages persist across restarts (no more amnesia!)
 - Automatic context window management
 - Smart message compaction when window gets full
 - Session continuity (pick up where you left off!)
+
+Architecture inspired by Letta's persistence patterns.
+Implementation: Original code by Substrate AI Contributors.
 
 Security:
 - Input validation on all parameters
@@ -57,7 +60,7 @@ class MessageContinuityError(Exception):
 
 class PersistentMessageManager:
     """
-    🏴‍☠️ LETTA'S CONTINUITY SECRET!
+    Persistent Message Manager with Context Window Optimization.
     
     Manages message persistence and context windows:
     
@@ -192,7 +195,7 @@ class PersistentMessageManager:
         include_summary: bool = True
     ) -> ContextWindow:
         """
-        🏴‍☠️ LETTA'S SECRET SAUCE: Optimized context window!
+        Build an optimized context window for LLM inference.
         
         Creates an optimal context window that:
         1. Fits within token limit

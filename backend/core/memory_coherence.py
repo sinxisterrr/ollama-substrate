@@ -1,20 +1,19 @@
 """
-🏴‍☠️ PHASE 3: Memory Coherence Engine - LETTA'S REAL SECRET!
+Memory Coherence Engine for Substrate AI
 
-This is THE magic that makes Letta so coherent:
-
-Three memory types working together:
+Three memory types working together for full coherence:
 1. **Core Memory**: Always loaded (persona, human, system context)
 2. **Recall Memory**: Recent conversation history
 3. **Archival Memory**: Long-term semantic storage with vector search
 
-The SECRET: They're all CONNECTED!
+The key: All memory types are CONNECTED!
 - New messages → update recall → extract key info → archival
 - Core memory updates → reflected everywhere
 - Cross-references maintained automatically
 - Semantic search finds relevant context
 
-This creates COHERENCE across all conversations!
+Architecture inspired by Letta's memory coherence patterns.
+Implementation: Original code by Substrate AI Contributors.
 
 Security:
 - Memory type validation
@@ -116,7 +115,7 @@ class MemoryCoherenceError(Exception):
 
 class MemoryCoherenceEngine:
     """
-    🏴‍☠️ LETTA'S ULTIMATE SECRET: Memory Coherence!
+    Memory Coherence Engine - Unified Memory Management.
     
     This engine maintains coherence across ALL memory types:
     
@@ -423,7 +422,7 @@ class MemoryCoherenceEngine:
         archival_query: Optional[str] = None
     ) -> CoherentMemoryState:
         """
-        🏴‍☠️ LETTA'S COHERENCE SECRET!
+        Build coherent memory state for LLM inference.
         
         Get complete memory state for LLM inference:
         1. Core memory (always included)
@@ -513,7 +512,7 @@ class MemoryCoherenceEngine:
         new_message: Message
     ):
         """
-        🏴‍☠️ LETTA'S AUTO-COHERENCE!
+        Auto-coherence: Maintain memory consistency after each message.
         
         Called after every message to maintain coherence:
         1. Check if core memory needs update

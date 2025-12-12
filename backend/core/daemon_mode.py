@@ -93,7 +93,7 @@ class AgentInstance:
 
 class SubstrateAIDaemon:
     """
-    🏴‍☠️ LETTA'S PERSISTENCE SECRET: 24/7 Daemon!
+    24/7 Daemon for Substrate AI - Always-On Agent Runtime.
     
     This daemon keeps agents running continuously:
     

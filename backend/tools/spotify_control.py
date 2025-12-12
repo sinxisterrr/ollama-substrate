@@ -884,7 +884,7 @@ def _execute_batch(operations: List[Dict[str, Any]]) -> str:
 
 
 # =============================================================================
-# MAIN LETTA TOOL FUNCTION
+# MAIN TOOL FUNCTION
 # =============================================================================
 
 def spotify_control(

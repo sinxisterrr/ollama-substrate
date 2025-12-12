@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-🏴‍☠️ LETTA AGENT FILE IMPORTER
+Agent File Importer for Substrate AI
 
-Imports .af (agent files) from Letta with full version management!
+Imports .af (agent files) with full version management!
+Compatible with Letta .af export format for interoperability.
 
 Features:
-- Parses Letta .af format
+- Parses .af format (Letta-compatible)
 - Extracts agents, memory blocks, messages
 - Creates versions in version manager
 - Imports into PostgreSQL (if available)
 - Preserves conversation history
 - Security: Validates all imported data
 
-Author: Substrate AI Team 🏴‍☠️
+Author: Substrate AI Contributors
 """
 
 import sys
@@ -35,11 +36,13 @@ from core.memory_coherence import MemoryCoherenceEngine
 
 class AgentFileImporter:
     """
-    🏴‍☠️ Import Letta .af files with full version management!
+    Import .af agent files with full version management!
+    
+    Compatible with Letta .af export format for interoperability.
     
     Handles:
     - Agent configuration
-    - Memory blocks (Letta-style)
+    - Memory blocks (standard format)
     - Conversation history
     - Tool configuration
     - Version tracking
@@ -194,7 +197,7 @@ class AgentFileImporter:
         change_description: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        🏴‍☠️ IMPORT LETTA AGENT FILE!
+        Import agent from .af file with full version management.
         
         Complete import with version management:
         1. Load .af file
@@ -214,7 +217,7 @@ class AgentFileImporter:
             Import summary dictionary
         """
         print("\n" + "="*60)
-        print("🏴‍☠️ IMPORTING LETTA AGENT FILE")
+        print("📦 IMPORTING AGENT FILE")
         print("="*60 + "\n")
         
         # Load agent file

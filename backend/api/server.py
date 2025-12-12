@@ -47,7 +47,7 @@ from api.routes_graph import graph_bp  # 🕸️ Graph RAG!
 from api.routes_discord import discord_bp, init_discord_routes  # 🎮 Discord Bot Integration!
 from api.routes_setup import setup_bp  # 🚀 First-time setup & onboarding!
 
-# 🏴‍☠️ LETTA MAGIC SAUCE!
+# PostgreSQL Coherence Layer
 from core.postgres_manager import create_postgres_manager_from_env
 from core.message_continuity import PersistentMessageManager
 from core.memory_coherence import MemoryCoherenceEngine
@@ -92,10 +92,10 @@ init_consciousness_broadcast(socketio)
 # Initialize components
 logger.info("🚀 Initializing Substrate AI Server...")
 
-# 🏴‍☠️ LETTA MAGIC SAUCE: PostgreSQL Integration!
+# PostgreSQL Integration for state persistence
 postgres_manager = create_postgres_manager_from_env()
 
-# 🏴‍☠️ STATE MANAGER: PostgreSQL-first, SQLite fallback!
+# State Manager: PostgreSQL-first, SQLite fallback
 state_manager = StateManager(
     db_path=os.getenv("SQLITE_DB_PATH", "./data/db/substrate_state.db"),
     postgres_manager=postgres_manager  # Enable PostgreSQL-first reads!

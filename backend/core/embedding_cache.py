@@ -1,20 +1,20 @@
 """
-🏴‍☠️ PHASE 5: Embedding Cache - Letta's Speed Secret!
+Embedding Cache for Substrate AI
 
-This is why Letta's semantic search is INSTANT:
+High-performance embedding cache for instant semantic search:
 
 The Problem:
 - Generating embeddings is SLOW (100-500ms per text)
 - Searching embeddings every time is expensive
 - Context: "What did we talk about yesterday?" → needs embedding!
 
-Letta's Solution:
+Our Solution:
 - Cache ALL embeddings in memory (instant lookup!)
 - Persist to PostgreSQL (survive restarts!)
 - LRU eviction (keep only frequently used)
 - Batch generation (reduce API calls!)
 
-The Magic:
+The Flow:
 Query → Check cache → If miss, generate → Cache it → Never generate again!
 
 This makes semantic search 100x FASTER! 🚀
@@ -135,7 +135,7 @@ class LRUCache:
 
 class EmbeddingCache:
     """
-    🏴‍☠️ LETTA'S SPEED SECRET: Embedding Cache!
+    Two-Tier Embedding Cache for High-Performance Semantic Search.
     
     Two-tier caching system:
     1. **Memory (LRU)**: Instant access for frequently used embeddings

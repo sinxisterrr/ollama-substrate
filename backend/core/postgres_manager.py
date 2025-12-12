@@ -1,12 +1,17 @@
 """
-🏴‍☠️ STOLEN FROM LETTA: PostgreSQL Manager with Coherence Magic!
+PostgreSQL Manager with Coherence Magic!
 
-This module provides persistent PostgreSQL storage with:
+Persistent storage layer for Substrate AI agents.
+
+Architecture inspired by Letta's persistence patterns.
+Implementation: Original code by Substrate AI Contributors.
+
+Features:
 - Normalized schema (agents, messages, memories)
 - pgvector support for semantic search
 - Message continuity across restarts
 - Automatic compaction and summarization
-- LETTA'S SECRET SAUCE: Everything stays connected!
+- Full state coherence: Everything stays connected!
 
 Security: SQL injection prevention via parameterized queries
 """
@@ -115,7 +120,7 @@ class PostgresManagerError(Exception):
 
 class PostgresManager:
     """
-    🏴‍☠️ LETTA'S MAGIC SAUCE: PostgreSQL with Coherence!
+    PostgreSQL Manager with Full State Coherence.
     
     Features:
     - Normalized schema (agents, messages, memories)
@@ -168,7 +173,7 @@ class PostgresManager:
         # Create database if it doesn't exist
         self._ensure_database_exists()
         
-        # Initialize connection pool (Letta's trick: keep connections warm!)
+        # Initialize connection pool (keep connections warm for performance!)
         try:
             self.pool = psycopg2.pool.ThreadedConnectionPool(
                 min_connections,
@@ -192,7 +197,7 @@ class PostgresManager:
         # Initialize schema
         self._init_schema()
         
-        print(f"🏴‍☠️ PostgresManager ready - LETTA MAGIC ACTIVATED!")
+        print(f"✅ PostgresManager ready - Coherence Engine activated!")
     
     def _ensure_database_exists(self):
         """
@@ -257,9 +262,10 @@ class PostgresManager:
     
     def _init_schema(self):
         """
-        🏴‍☠️ STOLEN FROM LETTA: Normalized schema with pgvector!
+        Initialize database schema with pgvector support.
         
-        Security: All tables use proper constraints and indexes
+        Schema design inspired by Letta's normalized approach.
+        Security: All tables use proper constraints and indexes.
         """
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -467,7 +473,7 @@ class PostgresManager:
             cursor.close()
     
     # ============================================
-    # MESSAGE METHODS (Letta's continuity magic!)
+    # MESSAGE METHODS - Conversation Persistence
     # ============================================
     
     def add_message(
@@ -602,7 +608,7 @@ class PostgresManager:
         max_messages: int = 50
     ) -> List[Message]:
         """
-        🏴‍☠️ LETTA'S SECRET: Get optimized context window!
+        Get optimized context window with recent messages.
         
         Returns recent messages for context, automatically managing window size.
         """
