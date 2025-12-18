@@ -65,14 +65,6 @@ logger = logging.getLogger(__name__)
 # Load environment
 load_dotenv()  # Loads .env from current directory or parent
 
-# Validate environment configuration
-try:
-    validate_environment()
-    logger.info("✅ Environment configuration valid")
-except Exception as e:
-    logger.error(f"❌ Configuration error: {e}")
-    sys.exit(1)
-
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React dev server
