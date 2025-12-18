@@ -38,6 +38,7 @@ from tools.memory_tools import MemoryTools
 from core.consciousness_loop import ConsciousnessLoop
 from core.consciousness_broadcast import init_consciousness_broadcast
 from core.version_manager import VersionManager
+from services.data_importer import import_json_memories
 
 # Import route blueprints
 from api.routes_models import models_bp
@@ -102,6 +103,19 @@ if postgres_manager:
     logger.info("✅ Message Continuity + Memory Coherence ONLINE!")
 else:
     logger.info("⚠️  PostgreSQL disabled - using SQLite only")
+
+# Auto-import JSON memories dropped into backend/data/imports
+data_import_dir = os.getenv("DATA_IMPORT_DIR", "./data/imports")
+try:
+    imported_count = import_json_memories(
+        state_manager=state_manager,
+        postgres_manager=postgres_manager,
+        import_dir=data_import_dir
+    )
+    if imported_count:
+        logger.info(f"📥 Imported {imported_count} memory entries from {data_import_dir}")
+except Exception as e:
+    logger.warning(f"⚠️  Data import skipped: {e}")
 
 version_manager = VersionManager(
     db_path=os.getenv("VERSION_DB_PATH", "./data/db/versions.db")
@@ -253,7 +267,8 @@ except Exception as e:
 if llm_client:
     consciousness_loop = ConsciousnessLoop(
         state_manager=state_manager,
-        openrouter_client=llm_client,  # Can be either OpenRouter or Ollama!
+        openrouter_client=None if use_ollama else llm_client,
+        ollama_client=llm_client if use_ollama else None,
         memory_tools=memory_tools,
         max_tool_calls_per_turn=int(os.getenv("MAX_TOOL_CALLS_PER_TURN", 10)),
         default_model=os.getenv("DEFAULT_LLM_MODEL", "openrouter/polaris-alpha"),

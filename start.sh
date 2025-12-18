@@ -151,48 +151,16 @@ start_backend() {
 
 # Function to start frontend
 start_frontend() {
-    echo -e "\n${GREEN}🎨 Starting Frontend...${NC}"
-
-    if ! command -v npm >/dev/null 2>&1; then
-        echo -e "${YELLOW}⚠️  npm command not found. Skipping frontend start in this environment.${NC}"
-        echo -e "${YELLOW}   (Install Node.js locally to run the React dev server.)${NC}"
-        return 1
-    fi
-    
-    # Kill existing process on port 5173
-    kill_port 5173
-    
-    cd "$FRONTEND_DIR"
-    
-    if [ ! -d "node_modules" ]; then
-        echo -e "${YELLOW}⚠️  No node_modules. Installing...${NC}"
-        npm install
-    fi
-    
-    echo -e "${GREEN}✅ Frontend starting on http://localhost:5173${NC}"
-    npm run dev
+    echo -e "\n${YELLOW}⚠️  Frontend disabled.${NC}"
+    echo -e "${YELLOW}   This deployment uses the backend only (e.g., Discord bot brain).${NC}"
+    echo -e "${YELLOW}   Skipping any Node/npm steps.${NC}"
+    return 0
 }
 
 # Function to start both
 start_both() {
-    echo -e "${BLUE}Starting both backend and frontend...${NC}"
-    
-    # Start backend in background
-    start_backend &
-    BACKEND_PID=$!
-    trap "kill $BACKEND_PID 2>/dev/null" EXIT
-    
-    # Wait for backend to be ready
-    echo -e "${YELLOW}Waiting for backend to start...${NC}"
-    sleep 5
-    
-    # Start frontend in foreground
-    if start_frontend; then
-        wait $BACKEND_PID
-    else
-        echo -e "${YELLOW}⚠️  Frontend did not start. Keeping backend running in foreground...${NC}"
-        wait $BACKEND_PID
-    fi
+    echo -e "${BLUE}Starting backend (frontend disabled)...${NC}"
+    start_backend
 }
 
 # Main logic

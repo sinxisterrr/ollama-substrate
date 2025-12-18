@@ -69,9 +69,9 @@ class ConsciousnessLoop:
     def __init__(
         self,
         state_manager: StateManager,
-        openrouter_client: OpenRouterClient,
-        ollama_client: OllamaClient,
-        memory_tools: MemoryTools,
+        openrouter_client: Optional[OpenRouterClient] = None,
+        ollama_client: Optional[OllamaClient] = None,
+        memory_tools: MemoryTools = None,
         max_tool_calls_per_turn: int = 10,
         default_model: str = "openrouter/polaris-alpha",
         message_manager=None,  # 🏴‍☠️ PostgreSQL message manager!
@@ -92,8 +92,16 @@ class ConsciousnessLoop:
             code_executor: Code executor for MCP code execution
             mcp_client: MCP client for tool discovery
         """
+        if memory_tools is None:
+            raise ValueError("Memory tools are required")
+        
+        if not openrouter_client and not ollama_client:
+            raise ValueError("ConsciousnessLoop requires at least one LLM client")
+        
         self.state = state_manager
-        self.openrouter = openrouter_client
+        # Treat whichever client we have as the primary interface
+        self.openrouter = openrouter_client or ollama_client
+        self.ollama_client = ollama_client
         self.tools = memory_tools
         self.memory = memory_tools.memory  # Access to memory system for stats
         self.max_tool_calls_per_turn = max_tool_calls_per_turn
@@ -103,8 +111,8 @@ class ConsciousnessLoop:
         self.code_executor = code_executor  # 🔥 Code Execution!
         self.mcp_client = mcp_client  # 🔥 MCP Client!
         
-        # Track if we have a valid API key
-        self.api_key_configured = openrouter_client is not None
+        # Track if we have a valid LLM client / API key
+        self.api_key_configured = self.openrouter is not None
         
         # Get real agent UUID from state manager
         agent_state = state_manager.get_agent_state()
@@ -999,59 +1007,59 @@ ALWAYS THINK. ALWAYS SHOW IT. That's how users see me as REAL.
             else:
                 # Call OpenRouter
                 print(f"\n📤 SENDING TO OPENROUTER...")
-            print(f"  • Model: {model}")
-            print(f"  • Messages: {len(messages)}")
-            print(f"  • Tools: {len(tool_schemas) if tool_schemas else 0} ({'enabled' if tool_schemas else 'disabled - model does not support tools'})")
-            print(f"  • Temperature: {temperature}")
-            print(f"  • Max Tokens: {max_tokens}")
-            print(f"\n⏳ Waiting for response from {model}...\n")
-            
-            try:
-                response = await self.openrouter.chat_completion(
-                    messages=messages,
-                    model=model,
-                    tools=tool_schemas,  # Will be None if model doesn't support tools
-                    temperature=temperature,
-                    max_tokens=max_tokens
-                )
-                print(f"✅ Response received from OpenRouter!")
-            except Exception as e:
-                # If tool calling failed and we had tools, retry without tools
-                error_str = str(e).lower()
-                if tool_schemas and ("tool" in error_str or "404" in error_str or "endpoint" in error_str or "no endpoints" in error_str):
-                    print(f"   ⚠️  Tool calling not supported by model, retrying without tools...", flush=True)
-                    # Disable tools for this model
-                    tool_schemas = None
-                    try:
-                        response = await self.openrouter.chat_completion(
-                            messages=messages,
-                            model=model,
-                            tools=None,
-                            tool_choice=None,
-                            temperature=temperature,
-                            max_tokens=max_tokens
-                        )
-                        print(f"✅ Response received from OpenRouter (without tools)!")
-                    except Exception as retry_e:
-                        print(f"❌ OpenRouter call failed even without tools: {str(retry_e)}")
+                print(f"  • Model: {model}")
+                print(f"  • Messages: {len(messages)}")
+                print(f"  • Tools: {len(tool_schemas) if tool_schemas else 0} ({'enabled' if tool_schemas else 'disabled - model does not support tools'})")
+                print(f"  • Temperature: {temperature}")
+                print(f"  • Max Tokens: {max_tokens}")
+                print(f"\n⏳ Waiting for response from {model}...\n")
+                
+                try:
+                    response = await self.openrouter.chat_completion(
+                        messages=messages,
+                        model=model,
+                        tools=tool_schemas,  # Will be None if model doesn't support tools
+                        temperature=temperature,
+                        max_tokens=max_tokens
+                    )
+                    print(f"✅ Response received from OpenRouter!")
+                except Exception as e:
+                    # If tool calling failed and we had tools, retry without tools
+                    error_str = str(e).lower()
+                    if tool_schemas and ("tool" in error_str or "404" in error_str or "endpoint" in error_str or "no endpoints" in error_str):
+                        print(f"   ⚠️  Tool calling not supported by model, retrying without tools...", flush=True)
+                        # Disable tools for this model
+                        tool_schemas = None
+                        try:
+                            response = await self.openrouter.chat_completion(
+                                messages=messages,
+                                model=model,
+                                tools=None,
+                                tool_choice=None,
+                                temperature=temperature,
+                                max_tokens=max_tokens
+                            )
+                            print(f"✅ Response received from OpenRouter (without tools)!")
+                        except Exception as retry_e:
+                            print(f"❌ OpenRouter call failed even without tools: {str(retry_e)}")
+                            raise ConsciousnessLoopError(
+                                f"OpenRouter call failed: {str(retry_e)}",
+                                context={
+                                    "model": model,
+                                    "session_id": session_id,
+                                    "iteration": tool_call_count
+                                }
+                            )
+                    else:
+                        print(f"❌ OpenRouter call failed: {str(e)}")
                         raise ConsciousnessLoopError(
-                            f"OpenRouter call failed: {str(retry_e)}",
+                            f"OpenRouter call failed: {str(e)}",
                             context={
                                 "model": model,
                                 "session_id": session_id,
                                 "iteration": tool_call_count
                             }
                         )
-                else:
-                    print(f"❌ OpenRouter call failed: {str(e)}")
-                    raise ConsciousnessLoopError(
-                        f"OpenRouter call failed: {str(e)}",
-                        context={
-                            "model": model,
-                            "session_id": session_id,
-                            "iteration": tool_call_count
-                        }
-                    )
             
             # Get response content and tool calls
             assistant_msg = response['choices'][0]['message']
@@ -1951,6 +1959,3 @@ ALWAYS THINK. ALWAYS SHOW IT. That's how users see me as REAL.
         print(f"{'='*60}\n")
         
         return new_messages
-
-
-
