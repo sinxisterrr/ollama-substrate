@@ -137,10 +137,34 @@ if has_valid_key:
         openrouter_monitor = OpenRouterCostMonitor(api_key=api_key)
         logger.info("💰 OpenRouter Cost Monitor initialized - REAL API costs!")
         
-        openrouter_client = OpenRouterClient(
-            api_key=api_key,
-            default_model=os.getenv("DEFAULT_LLM_MODEL", "openrouter/polaris-alpha"),
-            cost_tracker=cost_tracker
+        # Choose provider based on environment variable
+        use_ollama = os.getenv("USE_OLLAMA", "false").lower() == "true"
+
+        if use_ollama:
+            from core.ollama_client import OllamaClient
+            
+            print("🦙 Using Ollama as model provider")
+            client = OllamaClient(
+                api_key=os.getenv("OLLAMA_API_KEY"),
+                default_model=os.getenv("OLLAMA_MODEL", "llama3.1:70b"),
+                cost_tracker=cost_tracker  # Still tracks usage!
+            )
+        else:
+            from core.openrouter_client import OpenRouterClient
+            
+            print("🌐 Using OpenRouter as model provider")
+            client = OpenRouterClient(
+                api_key=os.getenv("OPENROUTER_API_KEY"),
+                default_model="openrouter/polaris-alpha",
+                cost_tracker=cost_tracker
+            )
+
+        # Now pass 'client' to ConsciousnessLoop
+        consciousness_loop = ConsciousnessLoop(
+            state_manager=state,
+            openrouter_client=client,  # Works with either!
+            memory_tools=memory_tools,
+            ...
         )
     except Exception as e:
         logger.warning(f"⚠️  OpenRouter client init failed: {e}")

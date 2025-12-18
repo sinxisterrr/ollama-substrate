@@ -29,6 +29,7 @@ import uuid
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.openrouter_client import OpenRouterClient, ToolCall
+from core.ollama_client import OllamaClient
 from core.state_manager import StateManager
 from core.memory_system import MemorySystem
 from tools.memory_tools import MemoryTools
@@ -69,6 +70,7 @@ class ConsciousnessLoop:
         self,
         state_manager: StateManager,
         openrouter_client: OpenRouterClient,
+        ollama_client: OllamaClient,
         memory_tools: MemoryTools,
         max_tool_calls_per_turn: int = 10,
         default_model: str = "openrouter/polaris-alpha",
