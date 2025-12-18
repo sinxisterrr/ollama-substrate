@@ -18,15 +18,41 @@ PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 
-PYTHON_BIN="python3"
-if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
-    if command -v python >/dev/null 2>&1; then
-        PYTHON_BIN="python"
+ensure_python() {
+    local candidates=("python3" "python")
+    for candidate in "${candidates[@]}"; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            PYTHON_BIN="$candidate"
+            return
+        fi
+    done
+
+    echo -e "${YELLOW}⚠️  Python not found. Attempting to install...${NC}"
+
+    if command -v apt-get >/dev/null 2>&1; then
+        apt-get update >/dev/null && apt-get install -y python3 python3-venv >/dev/null
+    elif command -v apk >/dev/null 2>&1; then
+        apk add --no-cache python3 py3-virtualenv >/dev/null
+    elif command -v yum >/dev/null 2>&1; then
+        yum install -y python3 python3-venv >/dev/null
     else
-        echo -e "${RED}❌ Neither python3 nor python command found. Please install Python 3.${NC}"
+        echo -e "${RED}❌ Could not find a package manager to install Python. Please install Python 3.${NC}"
         exit 1
     fi
-fi
+
+    if command -v python3 >/dev/null 2>&1; then
+        PYTHON_BIN="python3"
+        return
+    elif command -v python >/dev/null 2>&1; then
+        PYTHON_BIN="python"
+        return
+    fi
+
+    echo -e "${RED}❌ Python installation failed. Please install Python 3 manually.${NC}"
+    exit 1
+}
+
+ensure_python
 
 get_env_var() {
     local var_name="$1"
