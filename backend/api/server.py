@@ -176,21 +176,6 @@ else:
         logger.error("   Add OPENROUTER_API_KEY or enable Ollama with USE_OLLAMA=true")
         sys.exit(1)
 
-        # Now pass 'client' to ConsciousnessLoop
-        consciousness_loop = ConsciousnessLoop(
-            state_manager=state,
-            openrouter_client=client,  # Works with either!
-            memory_tools=memory_tools,
-            ...
-        )
-    except Exception as e:
-        logger.warning(f"⚠️  OpenRouter client init failed: {e}")
-        logger.info("   Server will start in setup mode - user can add API key via welcome modal")
-else:
-    logger.warning("⚠️  No valid OpenRouter API key found")
-    logger.info("   Server starting in setup mode - user will be prompted for API key")
-    logger.info("   Add key via welcome modal or edit backend/.env directly")
-
 memory_system = None  # Optional - only if Ollama is available
 try:
     memory_system = MemorySystem(
@@ -1172,4 +1157,3 @@ if __name__ == '__main__':
         use_reloader=False,  # ← THIS FIXES EVERYTHING!
         allow_unsafe_werkzeug=True  # For development
     )
-
