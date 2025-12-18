@@ -18,6 +18,16 @@ PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 
+PYTHON_BIN="python3"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    if command -v python >/dev/null 2>&1; then
+        PYTHON_BIN="python"
+    else
+        echo -e "${RED}❌ Neither python3 nor python command found. Please install Python 3.${NC}"
+        exit 1
+    fi
+fi
+
 get_env_var() {
     local var_name="$1"
     local env_value="${!var_name}"
@@ -103,7 +113,7 @@ start_backend() {
     if [ ! -d "venv" ]; then
         echo -e "${YELLOW}⚠️  No venv found. Running setup first...${NC}"
         cd "$PROJECT_ROOT"
-        python3 setup.py
+        "$PYTHON_BIN" setup.py
         cd "$BACKEND_DIR"
     fi
     
