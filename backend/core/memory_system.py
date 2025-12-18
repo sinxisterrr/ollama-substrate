@@ -15,6 +15,14 @@ from typing import Optional, Dict, List, Any
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from enum import Enum
+import numpy as np
+
+# Compatibility shim for NumPy 2.x where np.float_ and friends moved
+if not hasattr(np, "float_"):
+    np.float_ = np.float64  # type: ignore[attr-defined]
+if not hasattr(np, "int_"):
+    np.int_ = np.int64  # type: ignore[attr-defined]
+
 import chromadb
 from chromadb.config import Settings
 import ollama
@@ -1145,5 +1153,4 @@ def test_memory_system():
 if __name__ == "__main__":
     """Run tests if executed directly"""
     test_memory_system()
-
 
