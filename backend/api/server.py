@@ -126,38 +126,63 @@ from core.openrouter_cost_monitor import OpenRouterCostMonitor
 rate_limiter = RateLimiter(max_requests=5, window_seconds=10)  # Allow burst of 5 per 10s
 
 # Initialize OpenRouter components (may fail if no valid API key yet)
+# Initialize LLM client (OpenRouter or Ollama)
 openrouter_monitor = None
-openrouter_client = None
+llm_client = None
 
-api_key = os.getenv("OPENROUTER_API_KEY", "")
-has_valid_key = api_key and api_key.startswith("sk-or-v1-")
+# Check if we're using Ollama
+use_ollama = os.getenv('USE_OLLAMA', 'false').lower() == 'true'
 
-if has_valid_key:
+if use_ollama:
+    logger.info("🦙 Using Ollama Cloud as LLM provider")
+    
+    # Import Ollama client
     try:
-        openrouter_monitor = OpenRouterCostMonitor(api_key=api_key)
-        logger.info("💰 OpenRouter Cost Monitor initialized - REAL API costs!")
+        from core.ollama_client import OllamaClient
         
-        # Choose provider based on environment variable
-        use_ollama = os.getenv("USE_OLLAMA", "false").lower() == "true"
-
-        if use_ollama:
-            from core.ollama_client import OllamaClient
+        ollama_api_key = os.getenv('OLLAMA_API_KEY', '')
+        if not ollama_api_key:
+            logger.error("❌ OLLAMA_API_KEY not found in environment!")
+            logger.error("   Please add OLLAMA_API_KEY to your Railway variables")
+            sys.exit(1)
+        
+        # Initialize Ollama client
+        llm_client = OllamaClient(
+            api_key=ollama_api_key,
+            default_model=os.getenv('OLLAMA_MODEL', 'llama3.1:70b'),
+            cost_tracker=cost_tracker
+        )
+        logger.info(f"✅ Ollama Client initialized - Model: {os.getenv('OLLAMA_MODEL', 'llama3.1:70b')}")
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize Ollama client: {e}")
+        sys.exit(1)
+else:
+    logger.info("🌐 Using OpenRouter as LLM provider")
+    
+    # OpenRouter initialization
+    api_key = os.getenv("OPENROUTER_API_KEY", "")
+    has_valid_key = api_key and api_key.startswith("sk-or-v1-")
+    
+    if has_valid_key:
+        try:
+            from core.openrouter_cost_monitor import OpenRouterCostMonitor
+            openrouter_monitor = OpenRouterCostMonitor(api_key=api_key)
+            logger.info("💰 OpenRouter Cost Monitor initialized")
             
-            print("🦙 Using Ollama as model provider")
-            client = OllamaClient(
-                api_key=os.getenv("OLLAMA_API_KEY"),
-                default_model=os.getenv("OLLAMA_MODEL", "llama3.1:70b"),
-                cost_tracker=cost_tracker  # Still tracks usage!
-            )
-        else:
-            from core.openrouter_client import OpenRouterClient
-            
-            print("🌐 Using OpenRouter as model provider")
-            client = OpenRouterClient(
-                api_key=os.getenv("OPENROUTER_API_KEY"),
-                default_model="openrouter/polaris-alpha",
+            llm_client = OpenRouterClient(
+                api_key=api_key,
+                default_model=os.getenv("DEFAULT_LLM_MODEL", "openrouter/polaris-alpha"),
                 cost_tracker=cost_tracker
             )
+            logger.info("✅ OpenRouter Client initialized")
+        except Exception as e:
+            logger.error(f"❌ OpenRouter init failed: {e}")
+            sys.exit(1)
+    else:
+        logger.error("❌ No valid OpenRouter API key found")
+        logger.error("   Add OPENROUTER_API_KEY or enable Ollama with USE_OLLAMA=true")
+        sys.exit(1)
 
         # Now pass 'client' to ConsciousnessLoop
         consciousness_loop = ConsciousnessLoop(
@@ -247,17 +272,23 @@ except Exception as e:
     logger.warning(f"⚠️  MCP/Code Execution init failed: {e}")
     logger.info("   Continuing without MCP features...")
 
-consciousness_loop = ConsciousnessLoop(
-    state_manager=state_manager,
-    openrouter_client=openrouter_client,
-    memory_tools=memory_tools,
-    max_tool_calls_per_turn=int(os.getenv("MAX_TOOL_CALLS_PER_TURN", 10)),
-    default_model=os.getenv("DEFAULT_LLM_MODEL", "openrouter/polaris-alpha"),
-    message_manager=message_manager,  # 🏴‍☠️ PostgreSQL!
-    memory_engine=memory_engine,  # ⚡ Nested Learning (if available)!
-    code_executor=code_executor,  # 🔥 Code Execution (if available)!
-    mcp_client=mcp_client  # 🔥 MCP Client (if available)!
-)
+# Initialize ConsciousnessLoop (only if we have an LLM client)
+if llm_client:
+    consciousness_loop = ConsciousnessLoop(
+        state_manager=state_manager,
+        openrouter_client=llm_client,  # Can be either OpenRouter or Ollama!
+        memory_tools=memory_tools,
+        max_tool_calls_per_turn=int(os.getenv("MAX_TOOL_CALLS_PER_TURN", 10)),
+        default_model=os.getenv("DEFAULT_LLM_MODEL", "openrouter/polaris-alpha"),
+        message_manager=message_manager,
+        memory_engine=memory_engine,
+        code_executor=code_executor,
+        mcp_client=mcp_client
+    )
+    logger.info("✅ Consciousness Loop initialized")
+else:
+    logger.error("❌ No LLM client available - cannot initialize Consciousness Loop")
+    sys.exit(1)
 
 print("✅ Substrate AI Server initialized!")
 
