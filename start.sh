@@ -18,6 +18,26 @@ PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 
+get_env_var() {
+    local var_name="$1"
+    local env_value="${!var_name}"
+    if [ -n "$env_value" ]; then
+        echo "$env_value"
+        return
+    fi
+
+    if [ -f "$BACKEND_DIR/.env" ]; then
+        local line
+        line=$(awk -F= -v key="$var_name" '$1==key {print substr($0, index($0, "=")+1)}' "$BACKEND_DIR/.env" 2>/dev/null | tail -n 1)
+        if [ -n "$line" ]; then
+            line=$(echo "$line" | tr -d '\r')
+            line="${line#\"}"
+            line="${line%\"}"
+            echo "$line"
+        fi
+    fi
+}
+
 echo -e "${BLUE}╔═══════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║           🧠 SUBSTRATE AI - LAUNCHER                      ║${NC}"
 echo -e "${BLUE}╚═══════════════════════════════════════════════════════════╝${NC}"
@@ -44,6 +64,14 @@ kill_port() {
 start_backend() {
     echo -e "\n${GREEN}🔧 Starting Backend...${NC}"
     
+    local use_ollama_flag
+    use_ollama_flag=$(get_env_var "USE_OLLAMA")
+    use_ollama_flag=$(echo "${use_ollama_flag,,}")
+    local use_ollama=false
+    if [[ "$use_ollama_flag" == "true" || "$use_ollama_flag" == "1" || "$use_ollama_flag" == "yes" ]]; then
+        use_ollama=true
+    fi
+
     # Check for .env file
     if [ ! -f "$BACKEND_DIR/.env" ]; then
         echo -e "${YELLOW}⚠️  No .env file found. Creating from template...${NC}"
@@ -53,11 +81,17 @@ start_backend() {
         fi
     fi
     
-    # Check for API key
-    if grep -q "your_openrouter_api_key_here" "$BACKEND_DIR/.env" 2>/dev/null; then
-        echo -e "${RED}❌ Please add your OpenRouter API key to backend/.env${NC}"
-        echo -e "${YELLOW}   Get one at: https://openrouter.ai/keys${NC}"
-        exit 1
+    # Check for API key (unless using Ollama)
+    if [ "$use_ollama" = true ]; then
+        echo -e "${GREEN}✅ USE_OLLAMA=true detected. Skipping OpenRouter API key check.${NC}"
+    else
+        local openrouter_key
+        openrouter_key=$(get_env_var "OPENROUTER_API_KEY")
+        if [ -z "$openrouter_key" ] || [[ "$openrouter_key" == "your_openrouter_api_key_here" ]]; then
+            echo -e "${RED}❌ Please add your OpenRouter API key to backend/.env or set USE_OLLAMA=true${NC}"
+            echo -e "${YELLOW}   Get one at: https://openrouter.ai/keys${NC}"
+            exit 1
+        fi
     fi
     
     # Kill existing process on port 8284
@@ -82,6 +116,12 @@ start_backend() {
 # Function to start frontend
 start_frontend() {
     echo -e "\n${GREEN}🎨 Starting Frontend...${NC}"
+
+    if ! command -v npm >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠️  npm command not found. Skipping frontend start in this environment.${NC}"
+        echo -e "${YELLOW}   (Install Node.js locally to run the React dev server.)${NC}"
+        return 1
+    fi
     
     # Kill existing process on port 5173
     kill_port 5173
@@ -104,16 +144,19 @@ start_both() {
     # Start backend in background
     start_backend &
     BACKEND_PID=$!
+    trap "kill $BACKEND_PID 2>/dev/null" EXIT
     
     # Wait for backend to be ready
     echo -e "${YELLOW}Waiting for backend to start...${NC}"
     sleep 5
     
     # Start frontend in foreground
-    start_frontend
-    
-    # Cleanup on exit
-    trap "kill $BACKEND_PID 2>/dev/null" EXIT
+    if start_frontend; then
+        wait $BACKEND_PID
+    else
+        echo -e "${YELLOW}⚠️  Frontend did not start. Keeping backend running in foreground...${NC}"
+        wait $BACKEND_PID
+    fi
 }
 
 # Main logic
@@ -132,4 +175,3 @@ case "${1:-both}" in
         exit 1
         ;;
 esac
-
